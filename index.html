@@ -47,7 +47,7 @@
     .main-content {
       /* max-width was 800px; increased by 40% => 1120px */
       max-width: 1120px; /* line adjusting width of main page */
-      margin: 32px auto; /* top-bottom 32px, centered horizontally */
+      margin: 32px auto 1cm auto; /* bottom margin ~1cm */
       padding: 0 16px;
       background-color: #fff;
       border-radius: 8px;
@@ -145,15 +145,46 @@
       accent-color: #2196F3;
     }
 
+    /* ===== MATERIAL OPTIONS ===== */
+    .material-container {
+      display: none;
+      padding: 0 120px;
+      margin-bottom: 24px;
+    }
+    .material-container .mat-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+    .mat-option {
+      padding: 12px;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      font-size: 0.95rem;
+      color: #333;
+      cursor: pointer;
+      background: #fafafa;
+      transition: background 0.2s, border-color 0.2s;
+    }
+    .mat-option:hover {
+      background: #f0f0f0;
+    }
+    .mat-option.selected {
+      background: #2196F3;
+      border-color: #2196F3;
+      color: #fff;
+    }
+
     /* ===== CHAT AREA ===== */
     .chat-container {
       margin: 0 auto 32px auto;
-      width: 840px; 
+      width: 840px;
       position: relative;
     }
     .chat-textarea {
       width: 100%;
-      min-height: 66px;  
+      min-height: 66px;
       padding: 12px;
       border: 1px solid #ccc;
       border-radius: 12px;
@@ -188,7 +219,7 @@
     /* ===== FEEDBACK & IMAGE ===== */
     #feedback-container {
       margin: 0 auto 32px auto;
-      text-align: center;
+      text-align: center; /* center loader and image */
       font-size: 0.9rem;
       color: #666;
     }
@@ -197,6 +228,68 @@
       width: 50%;
       height: auto;
       border-radius: 8px;
+      margin-bottom: 1cm; /* 1cm bottom margin under image */
+    }
+
+    /* ===== MATERIAL CONTENT (table/passage) ===== */
+    #material-content {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 0 120px;
+      margin-bottom: 32px;
+    }
+    .passage, .exercise {
+      width: 840px; /* match search bar width */
+      background: #fff;
+      padding: 16px;
+      border-radius: 8px;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.1);
+      margin-bottom: 8px;
+      text-align: left;
+      font-size: 0.95rem;
+      color: #333;
+    }
+    .note {
+      font-size: 0.8rem;
+      color: #666;
+      margin-top: 4px;
+      text-align: center;
+    }
+    #material-table {
+      border-collapse: collapse;
+      margin-top: 16px;
+      width: auto;
+      margin-bottom: 1cm; /* 1cm bottom margin under table */
+    }
+    #material-table th,
+    #material-table td {
+      border: 1px solid #ccc;
+      padding: 8px;
+      text-align: left;
+      font-size: 0.9rem;
+    }
+    #material-table th {
+      background-color: #f0f0f0;
+    }
+
+    /* ===== LOADER ANIMATION ===== */
+    .loader {
+      display: inline-block;
+      font-style: italic;
+      position: relative;
+    }
+    .loader::after {
+      content: '';
+      display: inline-block;
+      width: 1ch;
+      animation: dots 1s steps(4, end) infinite;
+    }
+    @keyframes dots {
+      0%, 20% { content: ''; }
+      40% { content: '.'; }
+      60% { content: '..'; }
+      80%, 100% { content: '...'; }
     }
   </style>
 </head>
@@ -205,12 +298,8 @@
   <!-- HEADER: full-width blue bar -->
   <div class="header">
     <div class="logo">
-      <!-- White book icon -->
-      <svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
-        <path d="M8 8 H28 V56 H8 Z" />
-        <path d="M36 8 H56 V56 H36 Z" />
-        <path d="M32 8 V56" stroke="#fff" stroke-width="4" />
-      </svg>
+      <!-- Emoji graduation cap -->
+      <div style="font-size: 1.5rem; line-height: 40px; color: #FFEB3B;">🎓</div>
     </div>
     <h1>Spanish Blackboard Academy</h1>
   </div>
@@ -243,7 +332,7 @@
           <button data-value="All">all</button>
         </div>
       </div>
-      <div class="optional-label">, or optionally:</div>
+      <div class="optional-label">,or optionally:</div>
       <div class="page-row">
         <input type="number" id="page-from" placeholder="page from" min="1" />
         <input type="number" id="page-to" placeholder="page to" min="1" />
@@ -265,6 +354,18 @@
       </label>
     </div>
 
+    <!-- MATERIAL OPTIONS -->
+    <div class="material-container" id="material-container">
+      <div class="mat-grid">
+        <div class="mat-option" id="opt-verbs">Generate a list of all the verbs and their conjugates that we learnt in this unit</div>
+        <div class="mat-option" id="opt-passage">Generate a new passage based on the words that I learnt in this unit</div>
+        <div class="mat-option" id="opt-image">Generate an image to help understand the frequency adverbs better</div>
+        <div class="mat-option" id="opt-fill">Create 'fill in the gap' exercise based on the new nouns that we learnt</div>
+      </div>
+      <div id="material-content"></div>
+    </div>
+
+    <!-- CHAT AREA -->
     <div class="chat-container" id="chat-container">
       <textarea
         id="user-input"
@@ -274,8 +375,7 @@
       <button class="send-button" id="send-btn" title="Send">
         <svg viewBox="0 0 24 24">
           <path d="M4 12l1.41 1.41L11 7.83v12.34h2V7.83l5.59 5.58L20 12l-8-8z" />
-        </svg>
-      </button>
+        </svg></button>
     </div>
 
     <div id="feedback-container"></div>
@@ -310,7 +410,7 @@
 
     // HANDLE BUTTON SELECTION
     function handleSelect(group, value) {
-      const column = document.querySelector(`.grid-column[data-group="${group}"]`);
+      const column = document.querySelector(`.grid-column[data-group=\"${group}\"]`);
       column.querySelectorAll('button').forEach(btn => {
         btn.classList.toggle('selected', btn.getAttribute('data-value') === value);
       });
@@ -346,47 +446,228 @@
       updateMessage();
     });
 
-    // RADIO SWITCH: show/hide chat area
-    document.querySelectorAll('input[name="action"]').forEach(radio => {
-      radio.addEventListener('change', e => {
-        state.action = e.target.value;
-        document.getElementById('chat-container').style.display =
-          state.action === 'ask' ? 'block' : 'none';
-      });
-    });
-
-    // SEND BUTTON: detect “image/picture” + “food” and show feedback
+    // SEND BUTTON: detect “image/picture” + “food” and show image
     document.getElementById('send-btn').addEventListener('click', () => {
       const text = document.getElementById('user-input').value.trim();
       const feedbackEl = document.getElementById('feedback-container');
       feedbackEl.innerHTML = '';
       if (!text) return;
-
       const lower = text.toLowerCase();
       if (
+        state.action === 'ask' &&
         lower.includes('food') &&
         (lower.includes('image') || lower.includes('picture'))
       ) {
-        feedbackEl.textContent = 'Thinking…';
+        feedbackEl.innerHTML = '<span class="loader">Thinking</span>';
         setTimeout(() => {
-          feedbackEl.textContent = '';
+          feedbackEl.innerHTML = '';
           const img = document.createElement('img');
           img.id = 'generated-image';
           img.src = 'rhyme_food_image.png';
           img.alt = 'Generated rhyming passage image';
           feedbackEl.appendChild(img);
         }, 3000);
-      } else {
-        alert('You sent:\n\n' + text);
-      }
 
+      } else if (state.action === 'ask') {
+        alert('You sent:\n\n' + text + 'This is a sample demo and is not designed to answer all questions. please use the sample question: "Generate an image to help me learn the food related vocabulary in unit 6');
+      }
       document.getElementById('user-input').value = '';
     });
 
-    // INITIAL HIDE CHAT IF 'material' SELECTED
+    // RADIO SWITCH: show/hide chat or material options, clear content
+    document.querySelectorAll('input[name=\"action\"]').forEach(radio => {
+      radio.addEventListener('change', e => {
+        state.action = e.target.value;
+        const chat = document.getElementById('chat-container');
+        const mat = document.getElementById('material-container');
+        const feedbackEl = document.getElementById('feedback-container');
+        const matContent = document.getElementById('material-content');
+        // clear feedback and material content
+        feedbackEl.innerHTML = '';
+        matContent.innerHTML = '';
+        // remove selections
+        document.querySelectorAll('.mat-option').forEach(opt => {
+          opt.classList.remove('selected');
+        });
+        if (state.action === 'ask') {
+          chat.style.display = 'block';
+          mat.style.display = 'none';
+        } else {
+          chat.style.display = 'none';
+          mat.style.display = 'block';
+        }
+      });
+    });
+
+    // INITIAL HIDE OR SHOW
     if (state.action !== 'ask') {
       document.getElementById('chat-container').style.display = 'none';
     }
+
+    // MATERIAL OPTION: Verbs table
+    document.getElementById('opt-verbs').addEventListener('click', () => {
+      // highlight selection
+      document.querySelectorAll('.mat-option').forEach(opt => opt.classList.remove('selected'));
+      document.getElementById('opt-verbs').classList.add('selected');
+      const content = document.getElementById('material-content');
+      content.innerHTML = '<span class="loader">Thinking</span>';
+      setTimeout(() => {
+        content.innerHTML = `
+          <table id="material-table">
+            <thead>
+              <tr>
+                <th>Verbo</th>
+                <th>Yo</th>
+                <th>Tú</th>
+                <th>Él/Ella/Ud.</th>
+                <th>Nosotros/as</th>
+                <th>Vosotros/as</th>
+                <th>Ellos/as/Uds.</th>
+                <th>Ejemplo</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>despertarse</td>
+                <td>me despierto</td>
+                <td>te despiertas</td>
+                <td>se despierta</td>
+                <td>nos despertamos</td>
+                <td>os despertáis</td>
+                <td>se despiertan</td>
+                <td>Me despierto a las siete.</td>
+              </tr>
+              <tr>
+                <td>levantarse</td>
+                <td>me levanto</td>
+                <td>te levantas</td>
+                <td>se levanta</td>
+                <td>nos levantamos</td>
+                <td>os levantáis</td>
+                <td>se levantan</td>
+                <td>Mi padre se levanta temprano.</td>
+              </tr>
+              <tr>
+                <td>ducharse</td>
+                <td>me ducho</td>
+                <td>te duchas</td>
+                <td>se ducha</td>
+                <td>nos duchamos</td>
+                <td>os ducháis</td>
+                <td>se duchan</td>
+                <td>Yo me ducho por la ma\u00f1ana.</td>
+              </tr>
+              <tr>
+                <td>vestirse</td>
+                <td>me visto</td>
+                <td>te vistes</td>
+                <td>se viste</td>
+                <td>nos vestimos</td>
+                <td>os vest\u00eds</td>
+                <td>se visten</td>
+                <td>\u00c9l se viste r\u00e1pidamente.</td>
+              </tr>
+              <tr>
+                <td>desayunar</td>
+                <td>desayuno</td>
+                <td>desayunas</td>
+                <td>desayuna</td>
+                <td>desayunamos</td>
+                <td>desayun\u00e1is</td>
+                <td>desayunan</td>
+                <td>Nosotros desayunamos pan con queso.</td>
+              </tr>
+            </tbody>
+          </table>
+          <div class="note">* Results generated by AI; Blackboard Academy saves time and students get endless practice material.</div>
+        `;
+      }, 2000);
+    });
+
+    // MATERIAL OPTION: New passage
+    document.getElementById('opt-passage').addEventListener('click', () => {
+      document.querySelectorAll('.mat-option').forEach(opt => opt.classList.remove('selected'));
+      document.getElementById('opt-passage').classList.add('selected');
+      const content = document.getElementById('material-content');
+      content.innerHTML = '<span class="loader">Thinking</span>';
+      setTimeout(() => {
+        content.innerHTML = `
+          <div class="passage">
+            <p>
+              Hoy es jueves, y los estudiantes terminan sus tareas semanales.<br>
+              Yo me levanto a las seis y media, me ducho rápido y desayuno fruta y pan con aceite.<br>
+              Después, voy al instituto y asisto a mi clase de español.<br>
+              Mis compañeros y yo practicamos verbos reflexivos y leemos diálogos con atención.<br>
+              Nuestra profesora corrige errores comunes y explica los tiempos verbales.<br>
+              Durante el descanso, algunos comen bocadillos y otros simplemente hablan en el patio.
+            </p>
+            <p>
+              A la una, todos salimos y vuelvo a casa a las dos para almorzar con mi familia.<br>
+              Por la tarde, repaso lo aprendido y escribo frases nuevas en mi cuaderno.
+            </p>
+            <h3>🧠 Focus Conjugations:</h3>
+            <ul>
+              <li>me levanto / me ducho / desayuno → I get up / shower / eat breakfast</li>
+              <li>voy / asisto → I go / I attend</li>
+              <li>practicamos / leemos → we practice / we read</li>
+              <li>corrige / explica → she corrects / explains</li>
+              <li>comen / hablan → they eat / talk</li>
+              <li>salimos / vuelvo → we leave / I return</li>
+              <li>almorzar → to have lunch</li>
+              <li>repaso / escribo → I review / I write</li>
+            </ul>
+          </div>
+          <div class="note">* Results generated by AI; Blackboard Academy saves time and students get endless practice material.</div>
+        `;
+      }, 2000);
+    });
+
+    // MATERIAL OPTION: Frequency adverbs image
+    document.getElementById('opt-image').addEventListener('click', () => {
+      document.querySelectorAll('.mat-option').forEach(opt => opt.classList.remove('selected'));
+      document.getElementById('opt-image').classList.add('selected');
+      const content = document.getElementById('material-content');
+      content.innerHTML = '<span class="loader">Thinking</span>';
+      setTimeout(() => {
+        content.innerHTML = '';
+        const img = document.createElement('img');
+        img.id = 'generated-image';
+        img.src = 'frequency_adverbs.png';
+        img.alt = 'Frequency adverbs chart';
+        content.appendChild(img);
+        const note = document.createElement('div');
+        note.className = 'note';
+        note.textContent = '* Results generated by AI; Blackboard Academy saves time and students get endless practice material.';
+        content.appendChild(note);
+      }, 2000);
+    });
+
+    // MATERIAL OPTION: Fill-in-the-gap exercise
+    document.getElementById('opt-fill').addEventListener('click', () => {
+      document.querySelectorAll('.mat-option').forEach(opt => opt.classList.remove('selected'));
+      document.getElementById('opt-fill').classList.add('selected');
+      const content = document.getElementById('material-content');
+      content.innerHTML = '<span class="loader">Thinking</span>';
+      setTimeout(() => {
+        content.innerHTML = `
+          <div class="exercise">
+            <p>
+              Aquí tienes un ejercicio de 5 oraciones con huecos basado en la <strong>página 18</strong> del libro de español Term 2,
+              que trata sobre comidas y bebidas típicas, uso de <em>porque</em>, <em>para</em> y <em>por</em>.
+            </p>
+            <h3>✏️ Completa las oraciones con las palabras correctas: <em>porque</em>, <em>para</em> o <em>por</em></h3>
+            <ol>
+              <li>Quiero ir a Colombia <strong>________</strong> me encantan las arepas.</li>
+              <li>Vamos al mercado <strong>________</strong> comprar fruta fresca.</li>
+              <li>Gracias <strong>________</strong> invitarme a tu cena.</li>
+              <li>Yo como verduras a la plancha <strong>________</strong> son saludables.</li>
+              <li>Esta bebida es <strong>________</strong> ti. ¡Te va a encantar!</li>
+            </ol>
+          </div>
+          <div class="note">* Results generated by AI; Blackboard Academy saves time and students get endless practice material.</div>
+        `;
+      }, 2000);
+    });
   </script>
 </body>
 </html>
