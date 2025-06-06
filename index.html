@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Spanish Blackboard Academy – AI Tutor</title>
+  <style>
+    /* ===== GLOBAL RESET ===== */
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: Arial, sans-serif;
+    }
+    body {
+      background-color: #f9f9f9;
+      color: #333;
+    }
+
+    /* ===== HEADER (full-width blue bar) ===== */
+    .header {
+      background-color: #1A3660; /* deep blue */
+      color: #fff;
+      width: 100%;
+      padding: 16px 32px;
+      display: flex;
+      align-items: center;
+    }
+    .logo {
+      width: 40px;
+      height: 40px;
+      margin-right: 12px;
+    }
+    .logo svg {
+      width: 100%;
+      height: 100%;
+      fill: #fff;
+    }
+    .header h1 {
+      font-size: 1.25rem;
+      font-weight: bold;
+      color: #fff;
+      margin: 0;
+    }
+
+    /* ===== MAIN CONTENT CONTAINER ===== */
+    .main-content {
+      /* max-width was 800px; increased by 40% => 1120px */
+      max-width: 1120px; /* line adjusting width of main page */
+      margin: 32px auto; /* top-bottom 32px, centered horizontally */
+      padding: 0 16px;
+      background-color: #fff;
+      border-radius: 8px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+
+    /* ===== SUBTITLES ===== */
+    .subtitle {
+      margin-top: 24px;
+      font-size: 1.5rem; /* larger font-size */
+      text-align: left; /* left-aligned */
+      color: #1A3660;
+      padding-left: 16px;
+    }
+
+    /* ===== SELECTOR WRAPPER ===== */
+    .selector-wrapper {
+      width: 196px; /* 3×60px + 2×8px gap */
+      margin: 24px auto 16px auto;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start; /* align children to left */
+      padding-left: 16px;
+    }
+    .grid-container {
+      display: grid;
+      grid-template-columns: repeat(3, 60px);
+      gap: 12px;
+      margin-bottom: 8px;
+    }
+    .grid-column button {
+      width: 60px;
+      height: 36px;
+      background: #fff;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      font-size: 0.95rem;
+      color: #333;
+      cursor: pointer;
+      transition: background 0.2s, border-color 0.2s;
+    }
+    .grid-column button.selected {
+      background: #2196F3;
+      border-color: #2196F3;
+      color: #fff;
+    }
+
+    .optional-label {
+      font-size: 0.9rem;
+      color: #666;
+      margin-bottom: 8px;
+    }
+    .page-row {
+      display: flex;
+      gap: 12px;
+      width: 100%;
+      margin-bottom: 24px;
+    }
+    .page-row input {
+      width: 12.2ch;
+      padding: 8px;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      font-size: 0.9rem;
+      color: #333;
+      text-align: center;
+    }
+
+    /* ===== DYNAMIC MESSAGE ===== */
+    #dynamic-message {
+      margin-bottom: 16px;
+      font-size: 0.95rem;
+      color: #444;
+      text-align: left;
+      padding: 0 120px;
+    }
+
+    /* ===== RADIO OPTIONS ===== */
+    .options {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      padding: 0 120px;
+      margin-bottom: 24px;
+    }
+    .options label {
+      font-size: 0.95rem;
+      color: #333;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      cursor: pointer;
+    }
+    .options input {
+      accent-color: #2196F3;
+    }
+
+    /* ===== CHAT AREA ===== */
+    .chat-container {
+      margin: 0 auto 32px auto;
+      width: 840px; 
+      position: relative;
+    }
+    .chat-textarea {
+      width: 100%;
+      min-height: 66px;  
+      padding: 12px;
+      border: 1px solid #ccc;
+      border-radius: 12px;
+      resize: vertical;
+      font-size: 0.95rem;
+      color: #333;
+    }
+    .send-button {
+      position: absolute;
+      bottom: 12px;
+      right: 12px;
+      width: 36px;
+      height: 36px;
+      background: #2196F3;
+      border: none;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+    }
+    .send-button:hover {
+      background: #1976D2;
+    }
+    .send-button svg {
+      width: 18px;
+      height: 18px;
+      fill: #fff;
+      transform: rotate(-45deg);
+    }
+
+    /* ===== FEEDBACK & IMAGE ===== */
+    #feedback-container {
+      margin: 0 auto 32px auto;
+      text-align: center;
+      font-size: 0.9rem;
+      color: #666;
+    }
+    #generated-image {
+      margin-top: 16px;
+      width: 50%;
+      height: auto;
+      border-radius: 8px;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- HEADER: full-width blue bar -->
+  <div class="header">
+    <div class="logo">
+      <!-- White book icon -->
+      <svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
+        <path d="M8 8 H28 V56 H8 Z" />
+        <path d="M36 8 H56 V56 H36 Z" />
+        <path d="M32 8 V56" stroke="#fff" stroke-width="4" />
+      </svg>
+    </div>
+    <h1>Spanish Blackboard Academy</h1>
+  </div>
+
+  <!-- MAIN CONTENT -->
+  <div class="main-content">
+    <div class="subtitle">
+      I am your virtual teacher assistant. How can I help you today?
+    </div>
+
+    <div class="subtitle">
+      First tell me on what level you want to focus:
+    </div>
+
+    <div class="selector-wrapper">
+      <div class="grid-container">
+        <div class="grid-column" data-group="level">
+          <button data-value="A">A</button>
+          <button data-value="B">B</button>
+          <button data-value="All">all</button>
+        </div>
+        <div class="grid-column" data-group="unit">
+          <button data-value="1">1.</button>
+          <button data-value="2">2.</button>
+          <button data-value="All">all</button>
+        </div>
+        <div class="grid-column" data-group="subunit">
+          <button data-value="1">1</button>
+          <button data-value="2">2</button>
+          <button data-value="All">all</button>
+        </div>
+      </div>
+      <div class="optional-label">, or optionally:</div>
+      <div class="page-row">
+        <input type="number" id="page-from" placeholder="page from" min="1" />
+        <input type="number" id="page-to" placeholder="page to" min="1" />
+      </div>
+    </div>
+
+    <div id="dynamic-message">
+      (Select one option from each column above to form your focus area.)
+    </div>
+
+    <div class="options">
+      <label>
+        <input type="radio" name="action" value="ask" checked />
+        I have a question that I want to ask the AI teacher assistant
+      </label>
+      <label>
+        <input type="radio" name="action" value="material" />
+        I want to use material that the school has prepared using AI for this page
+      </label>
+    </div>
+
+    <div class="chat-container" id="chat-container">
+      <textarea
+        id="user-input"
+        class="chat-textarea"
+        placeholder="Ask your question..."
+      ></textarea>
+      <button class="send-button" id="send-btn" title="Send">
+        <svg viewBox="0 0 24 24">
+          <path d="M4 12l1.41 1.41L11 7.83v12.34h2V7.83l5.59 5.58L20 12l-8-8z" />
+        </svg>
+      </button>
+    </div>
+
+    <div id="feedback-container"></div>
+  </div>
+
+  <script>
+    // INITIAL STATE
+    const state = {
+      level: null,
+      unit: null,
+      subunit: null,
+      pageFrom: null,
+      pageTo: null,
+      action: 'ask'
+    };
+
+    // UPDATE DYNAMIC MESSAGE
+    function updateMessage() {
+      const msgEl = document.getElementById('dynamic-message');
+      const { level, unit, subunit, pageFrom, pageTo } = state;
+      const parts = [];
+      if (level && level !== 'All') parts.push(level);
+      if (unit && unit !== 'All') parts.push(unit);
+      if (subunit && subunit !== 'All') parts.push(subunit);
+      let mainText = parts.length ? parts.join('.') : 'all';
+      if (pageFrom && pageTo) {
+        msgEl.textContent = `Great, so you want to focus on ${mainText} page ${pageFrom} to ${pageTo}. How can I help you today?`;
+      } else {
+        msgEl.textContent = `Great, so you want to focus on ${mainText}. How can I help you today?`;
+      }
+    }
+
+    // HANDLE BUTTON SELECTION
+    function handleSelect(group, value) {
+      const column = document.querySelector(`.grid-column[data-group="${group}"]`);
+      column.querySelectorAll('button').forEach(btn => {
+        btn.classList.toggle('selected', btn.getAttribute('data-value') === value);
+      });
+      state[group] = value;
+      if (value === 'All') {
+        let nextGroup = null;
+        if (group === 'level') nextGroup = 'unit';
+        if (group === 'unit') nextGroup = 'subunit';
+        if (nextGroup) {
+          handleSelect(nextGroup, 'All');
+        }
+      }
+      updateMessage();
+    }
+
+    // HOOK UP GRID BUTTONS
+    document.querySelectorAll('.grid-column').forEach(column => {
+      const group = column.getAttribute('data-group');
+      column.querySelectorAll('button').forEach(btn => {
+        btn.addEventListener('click', () => {
+          handleSelect(group, btn.getAttribute('data-value'));
+        });
+      });
+    });
+
+    // PAGE INPUTS: update state and message
+    document.getElementById('page-from').addEventListener('input', e => {
+      state.pageFrom = e.target.value || null;
+      updateMessage();
+    });
+    document.getElementById('page-to').addEventListener('input', e => {
+      state.pageTo = e.target.value || null;
+      updateMessage();
+    });
+
+    // RADIO SWITCH: show/hide chat area
+    document.querySelectorAll('input[name="action"]').forEach(radio => {
+      radio.addEventListener('change', e => {
+        state.action = e.target.value;
+        document.getElementById('chat-container').style.display =
+          state.action === 'ask' ? 'block' : 'none';
+      });
+    });
+
+    // SEND BUTTON: detect “image/picture” + “food” and show feedback
+    document.getElementById('send-btn').addEventListener('click', () => {
+      const text = document.getElementById('user-input').value.trim();
+      const feedbackEl = document.getElementById('feedback-container');
+      feedbackEl.innerHTML = '';
+      if (!text) return;
+
+      const lower = text.toLowerCase();
+      if (
+        lower.includes('food') &&
+        (lower.includes('image') || lower.includes('picture'))
+      ) {
+        feedbackEl.textContent = 'Thinking…';
+        setTimeout(() => {
+          feedbackEl.textContent = '';
+          const img = document.createElement('img');
+          img.id = 'generated-image';
+          img.src = 'rhyme_food_image.png';
+          img.alt = 'Generated rhyming passage image';
+          feedbackEl.appendChild(img);
+        }, 3000);
+      } else {
+        alert('You sent:\n\n' + text);
+      }
+
+      document.getElementById('user-input').value = '';
+    });
+
+    // INITIAL HIDE CHAT IF 'material' SELECTED
+    if (state.action !== 'ask') {
+      document.getElementById('chat-container').style.display = 'none';
+    }
+  </script>
+</body>
+</html>
